@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>AhnLab Security Monitor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="mb-4">🛡️ 보안 위협 실시간 모니터링</h2>
+
+    <div class="card mb-4">
+        <div class="card-header">공격 유형별 현황 (Real-time DB Data)</div>
+        <div class="card-body" style="height: 300px">
+            <canvas id="attackChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>최근 탐지 로그 (Total: <span th:text="${logs.size()}">0</span>건)</span>
+            <button class="btn btn-success btn-sm">Excel Download</button>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>IP Address</th>
+                    <th>Attack Type</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="log : ${logs}">
+                    <td th:text="${#dates.format(log.detectedTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                    <td th:text="${log.ipAddress}"></td>
+                    <td th:text="${log.attackType}"></td>
+                    <td>
+                        <span class="badge bg-danger" th:if="${log.severityLevel == 'HIGH'}" th:text="${log.severityLevel}"></span>
+                        <span class="badge bg-warning text-dark" th:if="${log.severityLevel == 'MEDIUM'}" th:text="${log.severityLevel}"></span>
+                        <span class="badge bg-info text-dark" th:if="${log.severityLevel == 'LOW'}" th:text="${log.severityLevel}"></span>
+                    </td>
+                    <td th:text="${log.status}"></td>
+                </tr>
+                <tr th:if="${logs.isEmpty()}">
+                    <td colspan="5" class="text-center">현재 탐지된 보안 로그가 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /* Controller에서 보낸 리얼 데이터를 받음 */
+    var realLabels = [[${chartLabels}]]; // 예: ['SQL Injection', 'DDoS']
+    var realData = [[${chartData}]];     // 예: [5, 3]
+
+    const ctx = document.getElementById('attackChart').getContext('2d');
+    const myChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: realLabels,
+            datasets: [{
+                data: realData,
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+</script>
+</body>
+</html>
